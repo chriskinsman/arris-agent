@@ -1,0 +1,26 @@
+name: arris-agent
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  buildx:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Set up Docker buildx
+        id: buildx
+        uses: crazy-max/ghaction-docker-buildx@v1
+        with:
+          buildx-version: latest
+          qemu-version: latest
+      - name: Available platforms
+        run: echo ${{ steps.buildx.outputs.platforms }}
+      - name: Docker login
+        run: docker login --username ${{ secrets.DOCKER_HUB_REGISTRY_USERNAME }} --password ${{ secrets.DOCKER_HUB_REGISTRY_SECRET }}
+      - name: Run Buildx
+        run: docker buildx build --platform linux/amd64,linux/arm/v7,linux/arm64 --file Dockerfile --tag chriskinsman/arris-agent:1.0.$GITHUB_RUN_NUMBER --tag chriskinsman/arris-agent:latest --output "type=image,push=true" .
+        working-directory: arris-agent
