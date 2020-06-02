@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "arris-agent.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "arris-agent.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "arris-agent.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "arris-agent.selectorLabels" . | nindent 8 }}
+    spec:
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "chriskinsman/arris-agent:{{ .Chart.AppVersion }}"
+          env:
+{{ if .Values.debug }}          
+            - name: DEBUG
+              value: arris-agent*
+{{ end }}
+            - name: INFLUXDB_HOST
+              value: {{ required "You must specify and influxdb host" .Values.influxdb.host }}
+            - name: INFLUXDB_DB
+              value: {{ required "You must specify an influxdb database" .Values.influxdb.db }}
+            - name: INFLUXDB_USER
+              value: {{ required "You must specify and influxdb user" .Values.influxdb.user }}
+            - name: INFLUXDB_USER_PASSWORD
+              value: {{ required "You must specify an influxdb password" .Values.influxdb.password }}
